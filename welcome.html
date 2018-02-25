@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>NESCAFÉ Gold ile paylaşılacak anlar #paylaşılacakanlar</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="robots" content="noimageindex, noarchive">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="container">
+      <div class="row">
+        <div class="section full-width-block">
+          <div class="top center margin-bottom-20">
+            <img class="header-image" src="img/nescafe-header.png" alt="NESCAFÉ Gold" />
+          </div>
+          <div class="content center width-80 margin-top-40 margin-bottom-20">
+            <br />
+            <ul id="insta_userinfo"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script type="text/javascript">
+    var token = '2021953653.04e7304.8b9c4a919dff4b5aa0855957745206c8',
+      container2 = document.getElementById('insta_userinfo'),
+      scrElement2 = document.createElement('script');
+    window.processResult = function (response) {
+      container2.innerHTML = '<div><p><img src="' + response.data.profile_picture + '"></p></div>'
+        + '<div><p>Merhaba ' + response.data.username + ',</p>'
+        + '<h2><a target="_blank" href="https://www.instagram.com/explore/tags/payla%C5%9F%C4%B1lacakanlar/">#paylaşılacakanlar</a> ile</h2>'
+        + '<p><a class="btn button gotophoto-button" href="photos.html">anılarımı göster</a></p>'
+        + '</div>';
+      localStorage.setItem('globData', JSON.stringify(response.data)); // diğer sayfalarda kullanılabilmek üzere localstorage de saklanıyor. --iduran
+    }
+    scrElement2.setAttribute('src', 'https://api.instagram.com/v1/users/self?access_token=' + token + '&callback=processResult'); // instagram api den dönen user bilgileri dinamik bir scripte parse ediliyor. --iduran
+    document.body.appendChild(scrElement2);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>NESCAFÉ Gold ile paylaşılacak anlar #paylaşılacakanlar</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="robots" content="noimageindex, noarchive">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="container">
+      <div class="row">
+        <div class="section full-width-block">
+          <div class="top center margin-bottom-20">
+            <img class="header-image" src="img/nescafe-header.png" alt="NESCAFÉ Gold" />
+          </div>
+          <div class="content center margin-top-40 margin-bottom-20 withData">
+            <br />
+            <p class="innerTitle center width-80 margin-bottom-20">Bu fotoğrafı hatırlamak istediğini düşündük.</p>
+            <ul id="instaCapsule" class="clearfix"></ul>
+            <input type="button" value="&lt;" onClick="backward()" class="nvgtBtn backButton">
+            <input type="button" value="&gt;" onClick="forward()" class="nvgtBtn forwardButton">
+          </div>
+          <div class="content center width-80 margin-top-40 margin-bottom-20 noDataFound hide">
+            <p>Maalesef 2017 yılında paylaştığın fotoğrafını bulamadık!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script type="text/javascript">
+    var globData = null;
+    var photos = [];
+    var which = 0;
+    var usrId = null;
+    var fllwer = 0;
+    var fllw = 0;
+    $(document).init(function () {
+      // ilk sayfada alınıp localstorage e atanan instagram da login olmuş kullanıcının bilgileri okunup set ediliyor. --iduran
+      if (!globData) {
+        globData = JSON.parse(localStorage.getItem('globData'));
+      }
+      usrId = globData['id'];
+      fllwer = globData.counts['followed_by'];
+      fllw = globData.counts['follows'];
+    });
+    var token = '2021953653.04e7304.8b9c4a919dff4b5aa0855957745206c8';
+    $.ajax({
+      url: 'https://api.instagram.com/v1/users/self/media/recent',
+      dataType: 'jsonp',
+      type: 'GET',
+      data: { access_token: token, user: usrId },
+      success: function (data) {
+        photos = []; // her seferinde boşaltılmalı. --iduran
+        for (x in data.data) {
+          var createdDate = new Date(parseInt(data.data[x].created_time) * 1000); // paylaşım tarihi -int tipinde geliyor- --iduran
+          if (createdDate.getFullYear() == 2017) { // Sadece 2017 yılında paylaşılanlar çekiliyor. --iduran
+            if (data.data[x].tags) { // hashtag ler çekilip aşağıda filtreleniyor. --iduran
+              if (data.data[x].tags.length > 0) {
+                for (t in data.data[x].tags) {
+                  if ((data.data[x].tags[t] == 'tbt') || (data.data[x].tags[t] == 'tb') || (data.data[x].tags[t] == 'love') || (data.data[x].tags[t] == 'friends') || (data.data[x].tags[t] == 'best')) {
+                    pushData(data.data[x]);
+                  }
+                }
+              }
+            }
+            if (data.data[x].comments.count > data.data[x].likes.count) { // yorum sayısı beğeni sayısından çok olanlar çekiliyor. --iduran
+              pushData(data.data[x]);
+            }
+            if (data.data[x].likes.count > parseInt(fllwer) / 2) { // beğeni sayısı takipçi sayısının yarısından fazla olan en çok 20 adet fotoğraf çekiliyor. --iduran
+              var popPhotos = data.data[x].sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
+              var loopCount = popPhotos.length > 21 ? 21 : popPhotos.length;
+              for (var z = 0; z < loopCount; z++) {
+                pushData(popPhotos[z]);
+              }
+            }
+          }
+        }
+        photos.sort(function (a, b) { return parseFloat(b.rating) - parseFloat(a.rating); }); // fotoğraflar, ratingine göre descending sıralanıyor. --iduran
+        $('ul#instaCapsule').append('<li><img src="' + photos[0].url + '"><p>' + photos[0].count.toString() + ' beğeni</p></li>'); // ilk fotoğraf html e parse ediliyor. --iduran
+        if (photos.length > 0) { // toplam fotoğraf sayısına göre ileri-geri buttonlarının görünürlüğü ayarlanıyor. --iduran
+          if ($('.withData')[0].classList.value.indexOf('hide') > -1) {
+            $('.withData')[0].classList.remove('hide');
+            $('.noDataFound')[0].classList.add('hide');
+          }
+          if (photos.length < 2) {
+            $('.nvgtBtn')[0].classList.add('hide');
+          }
+          else {
+            if ($('.nvgtBtn')[0].classList.value.indexOf('hide') > -1) {
+              $('.nvgtBtn')[0].classList.remove('hide');
+            }
+          }
+        }
+        else {
+          if ($('.noDataFound')[0].classList.value.indexOf('hide') > -1) {
+            $('.noDataFound')[0].classList.remove('hide');
+            $('.withData')[0].classList.add('hide');
+          }
+        }
+        navigater();
+      },
+      error: function (data) {
+        console.log(data);
+      }
+    });
+    function pushData(obj) {
+      if (photos.indexOf(obj.images.low_resolution.url) == -1) { // daha önce eklenmişi eklememeli. --iduran
+        photos.push({ 'url': obj.images.low_resolution.url, 'count': obj.likes.count, 'rating': (parseInt(1000000000000 - parseInt(parseInt(fllwer) / parseInt(obj.likes.count)))) });
+      // rating hesaplaması: takipçi sayısı / beğeni sayısı oranı 1 trilyondan çıkarılıyor. böylece en fazla etkileşim almış fotoğrafların üstlerde gözükmesi sağlanıyor. --iduran
+      }
+    }
+    function backward() { // Geri buttonu işlevleri. --iduran
+      if (which <= 0) {
+        which = photos.length - 1;
+      } else {
+        which--;
+      }
+      $('ul#instaCapsule li img')[0].setAttribute('src', '');
+      $('ul#instaCapsule li p')[0].innerHTML = '';
+      $('ul#instaCapsule li img')[0].setAttribute('src', photos[which].url);
+      $('ul#instaCapsule li p')[0].innerHTML = photos[which].count.toString() + ' beğeni';
+      navigater();
+    }
+
+    function forward() { // ileri buttonu işlevleri. --iduran
+      which = (which + 1) % photos.length;
+      $('ul#instaCapsule li img')[0].setAttribute('src', '');
+      $('ul#instaCapsule li p')[0].innerHTML = '';
+      $('ul#instaCapsule li img')[0].setAttribute('src', photos[which].url);
+      $('ul#instaCapsule li p')[0].innerHTML = photos[which].count.toString() + ' beğeni';
+      navigater();
+    }
+    function navigater() { // ileri-geri buttonlarına basıldıkça ileri-geri buttonlarının görünürlüğü ayarlanıyor. --iduran
+      if (which == 0) {
+        $('.backButton')[0].classList.add('hide');
+      }
+      else {
+        if ($('.backButton')[0].classList.value.indexOf('hide') > -1) {
+          $('.backButton')[0].classList.remove('hide');
+        }
+      }
+      if (which == photos.length - 1) {
+        $('.forwardButton')[0].classList.add('hide');
+      }
+      else {
+        if ($('.forwardButton')[0].classList.value.indexOf('hide') > -1) {
+          $('.forwardButton')[0].classList.remove('hide');
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
