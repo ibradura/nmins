@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <title>NESCAFÉ Gold ile paylaşılacak anlar #paylaşılacakanlar</title>
@@ -11,7 +10,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link href="css/style.css" rel="stylesheet">
 </head>
-
 <body>
   <div class="main-container">
     <div class="container">
@@ -65,55 +63,35 @@
             var commRateToLike = (parseFloat(data.data[x].likes.count) > 0) ? (parseFloat(parseFloat(data.data[x].likes.count) * 0.25)) : 1;
             var likeRatetoFollower = (parseFloat(fllwer) > 0) ? (parseFloat(parseFloat(fllwer) * 0.25)) : 25;
             var tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('tbt') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('tbt') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('tb') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('tb') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('love') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('love') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('happiness') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('happiness') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('benimicinmutluluk') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('benimicinmutluluk') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('aniyakala') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('aniyakala') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('bestmoment') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('bestmoment') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('best') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('best') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('friends') > -1)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.tags.indexOf('friends') > -1);
+            setTempArr(tmpPhotos);
             tmpPhotos = []; // yorum sayısı beğeni sayısının %25 inden fazla olanlar çekiliyor. --iduran
-            tmpPhotos = data.data.filter(f => f.comments.count > commRateToLike)
-            tmpPhotos.foreach(t => {
-              pushData(t);
-            });
+            tmpPhotos = data.data.filter(f => f.comments.count > commRateToLike);
+            setTempArr(tmpPhotos);
             tmpPhotos = []; // beğeni sayısı takipçi sayısının %25 inden fazla olan en çok 20 adet fotoğraf çekiliyor. --iduran
             tmpPhotos = data.data.filter(f => f.likes.count > likeRatetoFollower)
             var popLikesPhotos = tmpPhotos.sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
@@ -164,8 +142,15 @@
         console.log(data);
       }
     });
+    function setTempArr(arr) {
+      if (arr.length > 0) {
+        arr.foreach(t => {
+          pushData(t);
+        });
+      }
+    }
     function pushData(obj) {
-      var index = photos.findIndex(x => x.images.low_resolution.url == obj.images.low_resolution.url);
+      var index = photos.findIndex(x => x.url == obj.images.low_resolution.url);
       if (index == -1) { // daha önce eklenmişi eklememeli. --iduran
         photos.push({ 'url': obj.images.low_resolution.url, 'count': obj.likes.count, 'rating': (parseInt(10000000000 - parseInt(parseInt(fllwer) / parseInt(obj.likes.count)))) });
         // rating hesaplaması: takipçi sayısı / beğeni sayısı oranı 1 trilyondan çıkarılıyor. böylece en fazla etkileşim almış fotoğrafların üstlerde gözükmesi sağlanıyor. --iduran
@@ -183,7 +168,6 @@
       $('ul#instaCapsule li p')[0].innerHTML = photos[which].count.toString() + ' beğeni';
       navigater();
     }
-
     function forward() { // ileri buttonu işlevleri. --iduran
       which = (which + 1) % photos.length;
       $('ul#instaCapsule li img')[0].setAttribute('src', '');
@@ -212,5 +196,4 @@
     }
   </script>
 </body>
-
 </html>
