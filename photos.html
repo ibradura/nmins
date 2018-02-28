@@ -143,11 +143,6 @@
         setTempArr(donenData);
       }
       hasPhoto = false;
-      hasPhoto = (donenData.tags.indexOf('nofilter') > -1);
-      if (hasPhoto) {
-        setTempArr(donenData);
-      }
-      hasPhoto = false;
       if (donenDataRates.length > 0) {
         for (dc in donenDataRates) {
           hasPhoto = (donenData.id == donenDataRates[dc].id && donenData.comments.count > parseInt(donenDataRates[dc].CommentRateToLike)); // yorum sayısı beğeni sayısının %25 inden fazla olanlar çekiliyor. --iduran
