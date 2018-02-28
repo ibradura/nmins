@@ -8,6 +8,11 @@
   <meta name="HandheldFriendly" content="true">
   <meta name="robots" content="noimageindex, noarchive">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta http-equiv="cache-control" content="max-age=0" />
+  <meta http-equiv="cache-control" content="no-cache" />
+  <meta http-equiv="expires" content="0" />
+  <meta http-equiv="expires" content="Fri, 02 Feb 1984 1:00:00 GMT" />
+  <meta http-equiv="pragma" content="no-cache" />
   <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
@@ -40,7 +45,11 @@
     var usrId = null;
     var fllwer = 0;
     var fllw = 0;
+    var createdDate = new Date('02.10.2017');
+    var tmpPhotos = [];
+    var donenDataRates = [];
     $(document).init(function () {
+      var token = location.hash.split('=')[1];
       // ilk sayfada alınıp localstorage e atanan instagram da login olmuş kullanıcının bilgileri okunup set ediliyor. --iduran
       if (!globData) {
         globData = JSON.parse(localStorage.getItem('globData'));
@@ -48,113 +57,188 @@
       usrId = globData['id'];
       fllwer = globData.counts['followed_by'];
       fllw = globData.counts['follows'];
-    });
-    var token = location.hash.split('=')[1];
-    $.ajax({
-      url: 'https://api.instagram.com/v1/users/self/media/recent',
-      dataType: 'jsonp',
-      type: 'GET',
-      data: { access_token: token, user: usrId },
-      success: function (data) {
-        photos = []; // her seferinde boşaltılmalı. --iduran
-        for (x in data.data) {
-          var createdDate = new Date(parseInt(data.data[x].created_time) * 1000); // paylaşım tarihi -int tipinde geliyor- --iduran
-          if (createdDate.getFullYear() == 2017) { // Sadece 2017 yılında paylaşılanlar çekiliyor. --iduran
-            var commRateToLike = (parseFloat(data.data[x].likes.count) > 0) ? (parseFloat(parseFloat(data.data[x].likes.count) * 0.25)) : 1;
-            var likeRatetoFollower = (parseFloat(fllwer) > 0) ? (parseFloat(parseFloat(fllwer) * 0.25)) : 25;
-            var tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('tbt') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('tb') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('love') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('happiness') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('benimicinmutluluk') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('aniyakala') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('bestmoment') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('best') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = [];
-            tmpPhotos = data.data.filter(f => f.tags.indexOf('friends') > -1);
-            setTempArr(tmpPhotos);
-            tmpPhotos = []; // yorum sayısı beğeni sayısının %25 inden fazla olanlar çekiliyor. --iduran
-            tmpPhotos = data.data.filter(f => f.comments.count > commRateToLike);
-            setTempArr(tmpPhotos);
-            tmpPhotos = []; // beğeni sayısı takipçi sayısının %25 inden fazla olan en çok 20 adet fotoğraf çekiliyor. --iduran
-            tmpPhotos = data.data.filter(f => f.likes.count > likeRatetoFollower)
-            var popLikesPhotos = tmpPhotos.sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
-            var loopLikesCount = popLikesPhotos.length > 21 ? 21 : popLikesPhotos.length;
-            for (var l = 0; l < loopLikesCount; l++) {
-              pushData(popLikesPhotos[l]);
+      $.ajax({
+        url: 'https://api.instagram.com/v1/users/self/media/recent',
+        dataType: 'jsonp',
+        type: 'GET',
+        data: { access_token: token, user: usrId },
+        success: function (data) {
+          photos = []; // her seferinde boşaltılmalı. --iduran
+          if (data) {
+            tmpPhotos = data.data.sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
+            if (tmpPhotos.length > 0) {
+              for (x in tmpPhotos) {
+                createdDate = new Date(parseInt(data.data[x].created_time) * 1000); // paylaşım tarihi -int tipinde geliyor- --iduran
+                if (createdDate.getFullYear() == 2017) { // Sadece 2017 yılında paylaşılanlar çekiliyor. --iduran
+                  var commRateToLike = (parseFloat(data.data[x].likes.count) > 0) ? (parseFloat(parseFloat(data.data[x].likes.count) * 0.25)) : 1;
+                  var likeRatetoFollower = (parseFloat(fllwer) > 0) ? (parseFloat(parseFloat(fllwer) * 0.25)) : 25;
+                  let objRates = { 'id': data.data[x].id.toString(), 'CommentRateToLike': commRateToLike, 'LikeRateToFollower': likeRatetoFollower };
+                  donenDataRates.push(objRates);
+                  passData(data.data[x]);
+                }
+              }
             }
-            tmpPhotos = []; // en çok yorum en çok 10 adet fotoğraf çekiliyor. --iduran
-            var popCommPhotos = data.data.sort(function (a, b) { return parseFloat(b.comments.count) - parseFloat(a.comments.count); });
-            var loopCommCount = popCommPhotos.length > 11 ? 11 : popCommPhotos.length;
-            for (var c = 0; c < loopCommCount; c++) {
-              pushData(popCommPhotos[c]);
+            passDataEnd(data.data);
+          }
+          else {
+            if ($('.withData')[0].classList.value.indexOf('hide') > -1) {
+              $('.withData')[0].classList.remove('hide');
+              $('.noDataFound')[0].classList.add('hide');
+            }
+            if ($('.nvgtBtn')[0].classList.value.indexOf('hide') > -1) {
+              $('.nvgtBtn')[0].classList.remove('hide');
             }
           }
+        },
+        error: function (data) {
+          console.log(data);
         }
-        if (photos.length == 0) { // Eğer hiçbiri olmazsa hiç fotoğraf göstermemiş olmamak için en çok beğenilenden aza doğru en fazla 20 fotoğraf göster. --iduran
-          var lastPhotos = data.data.sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
+      });
+    });
+    function passData(donenData) {
+      hasPhoto = false;
+      //hasPhoto = (JSON.stringify(donenData.tags).includes('tbt'));
+      hasPhoto = (donenData.tags.indexOf('tbt') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('tb') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('love') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('happiness') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('benimicinmutluluk') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('aniyakala') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('bestmoment') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('best') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('friends') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      hasPhoto = (donenData.tags.indexOf('nofilter') > -1);
+      if (hasPhoto) {
+        setTempArr(donenData);
+      }
+      hasPhoto = false;
+      if (donenDataRates.length > 0) {
+        for (dc in donenDataRates) {
+          hasPhoto = (donenData.id == donenDataRates[dc].id && donenData.comments.count > parseInt(donenDataRates[dc].CommentRateToLike)); // yorum sayısı beğeni sayısının %25 inden fazla olanlar çekiliyor. --iduran
+          if (hasPhoto) {
+            setTempArr(donenData);
+          }
+        }
+        hasPhoto = false;
+        for (dc in donenDataRates) {
+          hasPhoto = (donenData.id == donenDataRates[dc].id && donenData.likes.count > parseInt(donenDataRates[dc].LikeRateToFollower)); // beğeni sayısı takipçi sayısının %25 inden fazla olan fotoğraflar çekiliyor. --iduran
+          if (hasPhoto) {
+            setTempArr(donenData);
+          }
+        }
+        hasPhoto = false;
+      }
+    }
+    function passDataEnd(popData) {
+      // en çok yorum en çok 10 adet fotoğraf çekiliyor. --iduran
+      var popCommPhotos = popData.sort(function (a, b) { return parseFloat(b.comments.count) - parseFloat(a.comments.count); });
+      if (popCommPhotos.length > 0) {
+        var loopCommCount = popCommPhotos.length > 11 ? 11 : popCommPhotos.length;
+        for (var c = 0; c < loopCommCount; c++) {
+          pushData(popCommPhotos[c]);
+        }
+      }
+      popCommPhotos = [];
+      if (photos.length == 0) { // Eğer hiçbiri olmazsa hiç fotoğraf göstermemiş olmamak için en çok beğenilenden aza doğru en fazla 20 fotoğraf göster. --iduran
+        var lastPhotos = popData.sort(function (a, b) { return parseFloat(b.likes.count) - parseFloat(a.likes.count); });
+        if (lastPhotos.length > 0) {
           var loopLastCount = lastPhotos.length > 21 ? 21 : lastPhotos.length;
           for (var y = 0; y < loopLastCount; y++) {
             pushData(lastPhotos[y]);
           }
         }
-        if (photos.length > 0) { // toplam fotoğraf sayısına göre ileri-geri buttonlarının görünürlüğü ayarlanıyor. --iduran
-          photos.sort(function (a, b) { return parseFloat(b.rating) - parseFloat(a.rating); }); // fotoğraflar, ratingine göre descending sıralanıyor. --iduran
-          $('ul#instaCapsule').append('<li><img src="' + photos[0].url + '"><p>' + photos[0].count.toString() + ' beğeni</p></li>'); // ilk fotoğraf html e parse ediliyor. --iduran
-          if ($('.withData')[0].classList.value.indexOf('hide') > -1) {
-            $('.withData')[0].classList.remove('hide');
-            $('.noDataFound')[0].classList.add('hide');
+        lastPhotos = [];
+      }
+      if (photos.length > 0) { // toplam fotoğraf sayısına göre ileri-geri buttonlarının görünürlüğü ayarlanıyor. --iduran
+        photos.sort(function (a, b) { return parseFloat(b.rating) - parseFloat(a.rating); }); // fotoğraflar, ratingine göre descending sıralanıyor. --iduran
+        $('ul#instaCapsule').append('<li><img src="' + photos[0].url + '"><p>' + photos[0].count.toString() + ' beğeni</p></li>'); // ilk fotoğraf html e parse ediliyor. --iduran
+        if ($('.withData')[0].classList.value.indexOf('hide') > -1) {
+          $('.withData')[0].classList.remove('hide');
+          $('.noDataFound')[0].classList.add('hide');
+        }
+        if (photos.length < 2) {
+          $('.nvgtBtn')[0].classList.add('hide');
+        }
+        else {
+          if ($('.nvgtBtn')[0].classList.value.indexOf('hide') > -1) {
+            $('.nvgtBtn')[0].classList.remove('hide');
           }
-          if (photos.length < 2) {
-            $('.nvgtBtn')[0].classList.add('hide');
-          }
-          else {
-            if ($('.nvgtBtn')[0].classList.value.indexOf('hide') > -1) {
-              $('.nvgtBtn')[0].classList.remove('hide');
+        }
+      }
+      else {
+        if ($('.noDataFound')[0].classList.value.indexOf('hide') > -1) {
+          $('.noDataFound')[0].classList.remove('hide');
+          $('.withData')[0].classList.add('hide');
+        }
+      }
+      navigater();
+    }
+    function setTempArr(arr) {
+      if (arr.length > 0) {
+        for (t in arr) {
+          pushData(arr[t]);
+        };
+      }
+      arr = [];
+    }
+    function pushData(obj) {
+      var index = -1;
+      if (obj) {
+        if (obj.images) {
+          if (obj.images.low_resolution) {
+            if (obj.images.low_resolution.url) {
+              if (photos.length > 0) {
+                index = photos.findIndex(x => x.url == obj.images.low_resolution.url);
+              }
+              else {
+                index = -1;
+              }
+              if (index == -1) { // daha önce eklenmişi eklememeli. --iduran
+                photos.push({ 'url': obj.images.low_resolution.url, 'count': obj.likes.count, 'rating': (parseInt(10000000000 - parseInt(parseInt(fllwer) / parseInt(obj.likes.count)))) });
+                // rating hesaplaması: takipçi sayısı / beğeni sayısı oranı 1 trilyondan çıkarılıyor. böylece en fazla etkileşim almış fotoğrafların üstlerde gözükmesi sağlanıyor. --iduran
+              }
             }
           }
         }
-        else {
-          if ($('.noDataFound')[0].classList.value.indexOf('hide') > -1) {
-            $('.noDataFound')[0].classList.remove('hide');
-            $('.withData')[0].classList.add('hide');
-          }
-        }
-        navigater();
-      },
-      error: function (data) {
-        console.log(data);
       }
-    });
-    function setTempArr(arr) {
-      if (arr.length > 0) {
-        arr.foreach(t => {
-          pushData(t);
-        });
-      }
-    }
-    function pushData(obj) {
-      var index = photos.findIndex(x => x.url == obj.images.low_resolution.url);
-      if (index == -1) { // daha önce eklenmişi eklememeli. --iduran
-        photos.push({ 'url': obj.images.low_resolution.url, 'count': obj.likes.count, 'rating': (parseInt(10000000000 - parseInt(parseInt(fllwer) / parseInt(obj.likes.count)))) });
-        // rating hesaplaması: takipçi sayısı / beğeni sayısı oranı 1 trilyondan çıkarılıyor. böylece en fazla etkileşim almış fotoğrafların üstlerde gözükmesi sağlanıyor. --iduran
-      }
+      obj = null;
+      index = -1;
     }
     function backward() { // Geri buttonu işlevleri. --iduran
       if (which <= 0) {
