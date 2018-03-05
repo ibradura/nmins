@@ -72,7 +72,7 @@
                 if (createdDate.getFullYear() == 2017) { // Sadece 2017 yılında paylaşılanlar çekiliyor. --iduran
                   var commRateToLike = (parseFloat(data.data[x].likes.count) > 0) ? (parseFloat(parseFloat(data.data[x].likes.count) * 0.25)) : 1;
                   var likeRatetoFollower = (parseFloat(fllwer) > 0) ? (parseFloat(parseFloat(fllwer) * 0.25)) : 25;
-                  let objRates = { 'id': data.data[x].id.toString(), 'CommentRateToLike': commRateToLike, 'LikeRateToFollower': likeRatetoFollower };
+                  var objRates = { 'id': data.data[x].id.toString(), 'CommentRateToLike': commRateToLike, 'LikeRateToFollower': likeRatetoFollower };
                   donenDataRates.push(objRates);
                   passData(data.data[x]);
                 }
